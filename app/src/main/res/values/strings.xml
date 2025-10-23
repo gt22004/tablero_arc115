@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Tablero de Comunicación</string>
+    <string name="select_screen">Selecciona una Pantalla</string>
+    <string name="screen_1">Pantalla 1</string>
+    <string name="screen_2">Pantalla 2</string>
+    <string name="screen_3">Pantalla 3</string>
+    <string name="screen_4">Pantalla 4</string>
+    <string name="select_image">Seleccionar Imagen</string>
+    <string name="upload">Subir Imagen</string>
+    <string name="preview">Vista Previa</string>
+    <string name="uploading">Subiendo...</string>
+    <string name="upload_success">¡Imagen subida correctamente!</string>
+    <string name="upload_error">Error al subir imagen</string>
+    <string name="esp_ip">IP del ESP32</string>
+    <string name="settings">Configuración</string>
+    <string name="save">Guardar</string>
+    <string name="processing">Procesando imagen...</string>
+</resources>
