@@ -19,7 +19,6 @@ object RetrofitClient {
     fun getInstance(config: ESPConfig): Retrofit {
         val baseUrl = config.getBaseUrl()
 
-        // Recrear si la URL cambió
         if (retrofit == null || currentBaseUrl != baseUrl) {
             currentBaseUrl = baseUrl
 
@@ -54,13 +53,5 @@ object RetrofitClient {
      */
     fun getApiService(config: ESPConfig): ESPApiService {
         return getInstance(config).create(ESPApiService::class.java)
-    }
-
-    /**
-     * Resetea la instancia (útil al cambiar configuración)
-     */
-    fun reset() {
-        retrofit = null
-        currentBaseUrl = ""
     }
 }

@@ -1,9 +1,7 @@
 package com.example.espdisplay
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
@@ -12,20 +10,16 @@ class SplashActivity : AppCompatActivity() {
 
     private lateinit var startButton: MaterialButton
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        // Ocultar ActionBar
         supportActionBar?.hide()
 
-        // Inicializar vistas
         initViews()
 
-        // Configurar botón
         startButton.setOnClickListener {
-            navigateToMain()
+            navigateToGroups()
         }
     }
 
@@ -33,8 +27,8 @@ class SplashActivity : AppCompatActivity() {
         startButton = findViewById(R.id.startButton)
     }
 
-    private fun navigateToMain() {
-            showWiFiInstructions()
+    private fun navigateToGroups() {
+        showWiFiInstructions()
     }
 
     private fun showWiFiInstructions() {
@@ -47,18 +41,21 @@ class SplashActivity : AppCompatActivity() {
                         "2️⃣ Conecta tu teléfono al WiFi:\n" +
                         "   • Nombre: TableroV0.1\n" +
                         "   • Contraseña: tableroarc\n\n" +
-                        "3️⃣ Selecciona pantalla y sube la imagen\n\n"
+                        "3️⃣ Crea grupos y sube tus imágenes\n\n"
             )
             .setPositiveButton("¡Entendido!") { dialog, _ ->
                 dialog.dismiss()
-                startMainActivity()
+                startGroupsActivity()
             }
             .setCancelable(false)
             .show()
     }
-    private fun startMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
+
+    private fun startGroupsActivity() {
+        val intent = Intent(this, GroupsActivity::class.java).apply {
+            putExtra("ESP_IP", "192.168.4.1")
+            putExtra("ESP_PORT", 80)
+        }
         startActivity(intent)
-        finish() // Cierra SplashActivity para que no pueda volver
     }
 }

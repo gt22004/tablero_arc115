@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 
 class ImageSelectorActivity : AppCompatActivity() {
 
-    private lateinit var screenTitle: TextView
+    private lateinit var groupTitle: TextView
     private lateinit var imagePreview: ImageView
     private lateinit var noImageText: TextView
     private lateinit var processingProgress: ProgressBar
@@ -35,13 +35,13 @@ class ImageSelectorActivity : AppCompatActivity() {
 
     private lateinit var imageProcessor: ImageProcessor
     private var selectedBitmap: Bitmap? = null
-    private var screenNumber: Int = 1
+    private var groupId: Int = 0
+    private var groupName: String = ""
+    private var groupNumber: Int = 0
     private lateinit var espConfig: ESPConfig
 
-    // Variable para evitar reabrir galería
     private var isProcessingImage = false
 
-    // Launcher para seleccionar imagen
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -51,7 +51,6 @@ class ImageSelectorActivity : AppCompatActivity() {
         }
     }
 
-    // Launcher para permisos
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -70,14 +69,14 @@ class ImageSelectorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_image_selector)
 
-        // Obtener datos del intent
-        screenNumber = intent.getIntExtra("SCREEN_NUMBER", 1)
+        groupId = intent.getIntExtra("GROUP_ID", 0)
+        groupName = intent.getStringExtra("GROUP_NAME") ?: "Grupo"
+        groupNumber = intent.getIntExtra("GROUP_NUMBER", 0)
         espConfig = ESPConfig(
             ipAddress = intent.getStringExtra("ESP_IP") ?: "192.168.4.1",
             port = intent.getIntExtra("ESP_PORT", 80)
         )
 
-        // Inicializar
         imageProcessor = ImageProcessor(this)
         initViews()
         setupListeners()
@@ -85,14 +84,14 @@ class ImageSelectorActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        screenTitle = findViewById(R.id.screenTitle)
+        groupTitle = findViewById(R.id.screenTitle)
         imagePreview = findViewById(R.id.imagePreview)
         noImageText = findViewById(R.id.noImageText)
         processingProgress = findViewById(R.id.processingProgress)
         selectImageButton = findViewById(R.id.selectImageButton)
         uploadButton = findViewById(R.id.uploadButton)
 
-        screenTitle.text = "Pantalla $screenNumber"
+        groupTitle.text = groupName
     }
 
     private fun setupListeners() {
@@ -181,13 +180,6 @@ class ImageSelectorActivity : AppCompatActivity() {
                         selectedBitmap = processedBitmap
                         imagePreview.load(processedBitmap)
 
-                        val sizeInfo = imageProcessor.getImageSize(processedBitmap)
-                        Toast.makeText(
-                            this@ImageSelectorActivity,
-                            "Imagen cargada: $sizeInfo",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
                         updateUI()
                     } else {
                         Toast.makeText(
@@ -221,8 +213,9 @@ class ImageSelectorActivity : AppCompatActivity() {
 
     private fun navigateToUpload(bitmap: Bitmap) {
         val intent = Intent(this, UploadActivity::class.java).apply {
-            putExtra("SCREEN_NUMBER", screenNumber)
-            putExtra("SLOT_NUMBER", intent.getIntExtra("SLOT_NUMBER", 1))  // ← Agregar esto
+            putExtra("GROUP_ID", groupId)
+            putExtra("GROUP_NAME", groupName)
+            putExtra("GROUP_NUMBER", groupNumber)
             putExtra("ESP_IP", espConfig.ipAddress)
             putExtra("ESP_PORT", espConfig.port)
             putExtra("IMAGE_WIDTH", bitmap.width)
@@ -231,6 +224,7 @@ class ImageSelectorActivity : AppCompatActivity() {
 
         UploadActivity.tempBitmap = bitmap
         startActivity(intent)
+        finish()
     }
 
     override fun onDestroy() {
@@ -240,13 +234,11 @@ class ImageSelectorActivity : AppCompatActivity() {
         }
     }
 
-    // Guardar estado cuando se recrea la activity
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("IS_PROCESSING", isProcessingImage)
     }
 
-    // Restaurar estado
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         isProcessingImage = savedInstanceState.getBoolean("IS_PROCESSING", false)

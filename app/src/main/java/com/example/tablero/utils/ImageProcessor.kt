@@ -5,11 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
-import android.util.Base64
 import androidx.exifinterface.media.ExifInterface
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import kotlin.math.min
 
 class ImageProcessor(private val context: Context) {
 
@@ -17,7 +15,7 @@ class ImageProcessor(private val context: Context) {
         const val TARGET_WIDTH = 128
         const val TARGET_HEIGHT = 128
         const val JPEG_QUALITY = 70
-        const val MAX_FILE_SIZE_KB = 50 // Tamaño máximo en KB
+        const val MAX_FILE_SIZE_KB = 15
     }
 
     /**
@@ -45,7 +43,7 @@ class ImageProcessor(private val context: Context) {
             // 3. Cargar imagen con escala
             val scaledOptions = BitmapFactory.Options().apply {
                 inSampleSize = scaleFactor
-                inPreferredConfig = Bitmap.Config.RGB_565 // Menos memoria
+                inPreferredConfig = Bitmap.Config.RGB_565
             }
 
             val bitmap = context.contentResolver.openInputStream(uri)?.use { input ->
@@ -147,60 +145,6 @@ class ImageProcessor(private val context: Context) {
         } while (byteArray.size > MAX_FILE_SIZE_KB * 1024 && currentQuality > 10)
 
         return byteArray
-    }
-
-    /**
-     * Convierte bitmap a Base64 (útil para JSON)
-     */
-    fun bitmapToBase64(bitmap: Bitmap): String {
-        val byteArray = bitmapToByteArray(bitmap)
-        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
-    }
-
-    /**
-     * Convierte bitmap a formato RGB565 raw (más eficiente para ESP)
-     */
-    fun bitmapToRGB565ByteArray(bitmap: Bitmap): ByteArray {
-        val width = bitmap.width
-        val height = bitmap.height
-        val pixels = IntArray(width * height)
-        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-
-        val rgb565Data = ByteArray(width * height * 2)
-        var index = 0
-
-        for (pixel in pixels) {
-            // Extraer componentes RGB
-            val r = (pixel shr 16 and 0xFF) shr 3  // 5 bits
-            val g = (pixel shr 8 and 0xFF) shr 2   // 6 bits
-            val b = (pixel and 0xFF) shr 3         // 5 bits
-
-            // Combinar en formato RGB565
-            val rgb565 = (r shl 11) or (g shl 5) or b
-
-            // Convertir a bytes (big-endian)
-            rgb565Data[index++] = (rgb565 shr 8).toByte()
-            rgb565Data[index++] = (rgb565 and 0xFF).toByte()
-        }
-
-        return rgb565Data
-    }
-
-    /**
-     * Divide ByteArray en chunks para envío fragmentado
-     */
-    fun splitIntoChunks(data: ByteArray, chunkSize: Int = 1024): List<ByteArray> {
-        val chunks = mutableListOf<ByteArray>()
-        var offset = 0
-
-        while (offset < data.size) {
-            val length = min(chunkSize, data.size - offset)
-            val chunk = data.copyOfRange(offset, offset + length)
-            chunks.add(chunk)
-            offset += length
-        }
-
-        return chunks
     }
 
     /**
