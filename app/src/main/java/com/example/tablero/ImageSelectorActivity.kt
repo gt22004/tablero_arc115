@@ -216,10 +216,11 @@ class ImageSelectorActivity : AppCompatActivity() {
 
                 // Obtener índice de subcategoría
                 val subcategoryList = subcategoriesByCategory[categoryNum] ?: emptyList()
-                val subcategoryNum = subcategoryList.indexOf(subcategoryText)
+                val subLocal = subcategoryList.indexOf(subcategoryText)
+                val subGlobal = categoryNum * 12 + subLocal
 
                 selectedBitmap?.let { bitmap ->
-                    navigateToUpload(bitmap, title, categoryNum, subcategoryNum)
+                    navigateToUpload(bitmap, title, categoryNum, subGlobal)
                 }
             }
         }
