@@ -19,7 +19,9 @@
         android:usesCleartextTraffic="true"
         tools:ignore="ExtraText"
         tools:targetApi="31">
-
+        <activity
+            android:name="com.example.tablero.MainActivity"
+            android:exported="false" />
         <!-- Pantalla de inicio (Splash) -->
         <activity
             android:name=".SplashActivity"
@@ -27,33 +29,23 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Pantalla principal de grupos -->
+        </activity> <!-- Galería principal -->
         <activity
-            android:name=".GroupsActivity"
+            android:name=".MainActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- Galería de imágenes de un grupo -->
-        <activity
-            android:name=".GroupGalleryActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-
-        <!-- Selector de imagen -->
+            android:screenOrientation="portrait" /> <!-- Selector de imagen con formulario -->
         <activity
             android:name=".ImageSelectorActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:exported="false" />
-
-        <!-- Subida de imagen -->
+            android:exported="false"
+            android:screenOrientation="portrait" /> <!-- Subida de imagen -->
         <activity
             android:name=".UploadActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

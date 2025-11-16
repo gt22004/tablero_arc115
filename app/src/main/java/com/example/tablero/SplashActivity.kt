@@ -19,16 +19,12 @@ class SplashActivity : AppCompatActivity() {
         initViews()
 
         startButton.setOnClickListener {
-            navigateToGroups()
+            showWiFiInstructions()
         }
     }
 
     private fun initViews() {
         startButton = findViewById(R.id.startButton)
-    }
-
-    private fun navigateToGroups() {
-        showWiFiInstructions()
     }
 
     private fun showWiFiInstructions() {
@@ -41,21 +37,22 @@ class SplashActivity : AppCompatActivity() {
                         "2️⃣ Conecta tu teléfono al WiFi:\n" +
                         "   • Nombre: TableroV0.1\n" +
                         "   • Contraseña: tableroarc\n\n" +
-                        "3️⃣ Crea grupos y sube tus imágenes\n\n"
+                        "3️⃣ Agrega tus imágenes al tablero\n\n"
             )
             .setPositiveButton("¡Entendido!") { dialog, _ ->
                 dialog.dismiss()
-                startGroupsActivity()
+                startGalleryActivity()
             }
             .setCancelable(false)
             .show()
     }
 
-    private fun startGroupsActivity() {
-        val intent = Intent(this, GroupsActivity::class.java).apply {
+    private fun startGalleryActivity() {
+        val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("ESP_IP", "192.168.4.1")
             putExtra("ESP_PORT", 80)
         }
         startActivity(intent)
+        finish()
     }
 }

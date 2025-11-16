@@ -11,7 +11,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.example.espdisplay.network.RetrofitClient
 import com.example.espdisplay.models.ESPConfig
 import com.example.espdisplay.utils.ImageProcessor
 import com.google.android.material.button.MaterialButton
@@ -30,9 +29,9 @@ class UploadActivity : AppCompatActivity() {
     private lateinit var doneButton: MaterialButton
 
     private lateinit var imageProcessor: ImageProcessor
-    private var groupId: Int = 0
-    private var groupName: String = ""
-    private var groupNumber: Int = 0
+    private var title: String = ""
+    private var category: Int = 0
+    private var subcategory: Int = 0
     private lateinit var espConfig: ESPConfig
     private var bitmap: Bitmap? = null
 
@@ -44,9 +43,11 @@ class UploadActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_upload)
 
-        groupId = intent.getIntExtra("GROUP_ID", 0)
-        groupName = intent.getStringExtra("GROUP_NAME") ?: "Grupo"
-        groupNumber = intent.getIntExtra("GROUP_NUMBER", 0)
+        supportActionBar?.hide()
+
+        title = intent.getStringExtra("TITLE") ?: ""
+        category = intent.getIntExtra("CATEGORY", 0)
+        subcategory = intent.getIntExtra("SUBCATEGORY", 0)
         espConfig = ESPConfig(
             ipAddress = intent.getStringExtra("ESP_IP") ?: "192.168.4.1",
             port = intent.getIntExtra("ESP_PORT", 80)
@@ -69,7 +70,7 @@ class UploadActivity : AppCompatActivity() {
         doneButton = findViewById(R.id.doneButton)
 
         doneButton.setOnClickListener {
-            finish()
+            goToGallery()
         }
     }
 
@@ -86,36 +87,50 @@ class UploadActivity : AppCompatActivity() {
                 updateProgress(0, "Preparando imagen...")
 
                 val imageBytes = withContext(Dispatchers.IO) {
-                    imageProcessor.bitmapToByteArray(bitmapToUpload)
+                    imageProcessor.bitmapToRGB565_LE(bitmapToUpload)
                 }
 
                 updateProgress(25, "Conectando...")
-                // Convertir a Base64
+
                 val base64Image = android.util.Base64.encodeToString(imageBytes, android.util.Base64.NO_WRAP)
+
                 val jsonBody = """{
-                "groupId": $groupId,
-                "groupNumber": $groupNumber,
-                "image": "$base64Image"
+                "image": "$base64Image",
+                "title": "$title",
+                "category": $category,
+                "subcategory": $subcategory
             }""".trimIndent()
+
+                android.util.Log.d("Upload", "Enviando: title=$title, cat=$category, subcat=$subcategory")
 
                 val body = jsonBody.toRequestBody("application/json".toMediaTypeOrNull())
 
-                val apiService = RetrofitClient.getApiService(espConfig)
                 val response = withContext(Dispatchers.IO) {
-                    apiService.uploadImage(body)
+                    val client = okhttp3.OkHttpClient.Builder()
+                        .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                        .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+
+                    val request = okhttp3.Request.Builder()
+                        .url("http://${espConfig.ipAddress}:${espConfig.port}/upload")
+                        .post(body)
+                        .build()
+
+                    client.newCall(request).execute()
                 }
 
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val fileName = response.body()?.fileName
-                    if (!fileName.isNullOrEmpty()) {
-                        updateProgress(100, "¡Imagen agregada al grupo!")
-                        showSuccess()
-                    }
+                android.util.Log.d("Upload", "Response: ${response.code}")
+
+                if (response.isSuccessful) {
+                    updateProgress(100, "¡Imagen enviada!")
+                    showSuccess()
                 } else {
-                    showError("Error al subir imagen: ${response.code()}")
+                    showError("Error al subir: ${response.code}")
                 }
 
             } catch (e: Exception) {
+                android.util.Log.e("Upload", "Error: ${e.message}", e)
                 showError("Error: ${e.message}")
             }
         }
@@ -132,15 +147,7 @@ class UploadActivity : AppCompatActivity() {
         doneButton.visibility = View.VISIBLE
         doneButton.text = "Ir a galería"
 
-        doneButton.setOnClickListener {
-            goToGallery()
-        }
-
-        Toast.makeText(
-            this,
-            "Imagen agregada a '$groupName'",
-            Toast.LENGTH_LONG
-        ).show()
+        Toast.makeText(this, "Imagen '$title' agregada", Toast.LENGTH_LONG).show()
     }
 
     private fun showError(message: String) {
@@ -166,14 +173,10 @@ class UploadActivity : AppCompatActivity() {
         tempBitmap?.recycle()
         tempBitmap = null
     }
+
     private fun goToGallery() {
-        val intent = Intent(this, GroupGalleryActivity::class.java).apply {
-            putExtra("GROUP_ID", groupId)
-            putExtra("GROUP_NAME", groupName)
-            putExtra("GROUP_NUMBER", groupNumber)
-            putExtra("ESP_IP", espConfig.ipAddress)
-            putExtra("ESP_PORT", espConfig.port)
-        }
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()
     }

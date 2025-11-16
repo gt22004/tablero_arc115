@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#115D61"
+    android:background="#27A7AD"
     tools:context=".UploadActivity">
 
     <ImageView

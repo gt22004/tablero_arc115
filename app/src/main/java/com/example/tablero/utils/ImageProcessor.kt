@@ -12,8 +12,8 @@ import java.io.InputStream
 class ImageProcessor(private val context: Context) {
 
     companion object {
-        const val TARGET_WIDTH = 128
-        const val TARGET_HEIGHT = 128
+        const val TARGET_WIDTH = 130
+        const val TARGET_HEIGHT = 130
         const val JPEG_QUALITY = 70
         const val MAX_FILE_SIZE_KB = 15
     }
@@ -129,30 +129,51 @@ class ImageProcessor(private val context: Context) {
         return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
     }
 
-    /**
-     * Convierte bitmap a ByteArray comprimido en JPEG
-     */
-    fun bitmapToByteArray(bitmap: Bitmap, quality: Int = JPEG_QUALITY): ByteArray {
-        val outputStream = ByteArrayOutputStream()
-        var currentQuality = quality
-        var byteArray: ByteArray
 
-        do {
-            outputStream.reset()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, currentQuality, outputStream)
-            byteArray = outputStream.toByteArray()
-            currentQuality -= 5
-        } while (byteArray.size > MAX_FILE_SIZE_KB * 1024 && currentQuality > 10)
+    fun bitmapToRGB565(bitmap: Bitmap): ByteArray {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
-        return byteArray
+        val buffer = ByteArray(width * height * 2)
+        var index = 0
+
+        for (color in pixels) {
+            val r = (color shr 19) and 0x1F
+            val g = (color shr 10) and 0x3F
+            val b = (color shr 3) and 0x1F
+
+            val rgb565 = (r shl 11) or (g shl 5) or b
+
+            buffer[index++] = (rgb565 shr 8).toByte()
+            buffer[index++] = (rgb565 and 0xFF).toByte()
+        }
+
+        return buffer
     }
 
-    /**
-     * Obtiene información del tamaño de la imagen procesada
-     */
-    fun getImageSize(bitmap: Bitmap): String {
-        val byteArray = bitmapToByteArray(bitmap)
-        val sizeKB = byteArray.size / 1024.0
-        return String.format("%.2f KB (%d x %d)", sizeKB, bitmap.width, bitmap.height)
+    fun bitmapToRGB565_LE(bitmap: Bitmap): ByteArray {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        val buffer = ByteArray(width * height * 2)
+        var index = 0
+
+        for (color in pixels) {
+
+            val r = (color shr 19) and 0x1F
+            val g = (color shr 10) and 0x3F
+            val b = (color shr 3) and 0x1F
+
+            val rgb565 = (r shl 11) or (g shl 5) or b
+
+            buffer[index++] = (rgb565 and 0xFF).toByte()         // LOW
+            buffer[index++] = ((rgb565 shr 8) and 0xFF).toByte() // HIGH
+        }
+
+        return buffer
     }
 }
